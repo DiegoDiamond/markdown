@@ -53,6 +53,8 @@ export default async (req, res) => {
             items = [...items, ...itemByPage]
             count = count - 20
         }
+        console.log('Download products: ', items.length)
+        if (items.length !== count) items = []
     } catch (error) {
         console.log('puppeteer error: ', error)
     } finally {
