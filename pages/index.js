@@ -7,6 +7,9 @@ import isoFetch from 'isomorphic-unfetch'
 
 export default function Home() {
     const [data, setData] = React.useState({})
+    const [addData, setAddData] = React.useState([])
+    const [updateData, setUpdate] = React.useState([])
+    const [removeData, setRemoveData] = React.useState([])
 
     React.useEffect(() => {
         async function asyncRepeat(f) {
@@ -16,56 +19,56 @@ export default function Home() {
         asyncRepeat(delay)
     }, [])
 
-    const delay = () => {
-        return new Promise((resolve, reject) => {
-            setTimeout(async () => {
-                await onFetch()
-                resolve()
-            }, 60000)
-        })
+    const delay = async () => {
+        await onFetch()
+        await new Promise((resolve) => setTimeout(resolve, 60000))
     }
 
     const onFetch = async () => {
-        const resp = await axios.get('/api/pup')
+        try {
+            const resp = await axios.get('/api/pup')
 
-        const DNSdata = resp.data
+            const DNSdata = resp.data
+            if (DNSdata.length < 1) return
+            console.log(DNSdata)
+            setData(DNSdata)
+            const DNSdataLinks = DNSdata.map((item) => {
+                return item.link
+            })
 
-        const DNSdataLinks = DNSdata.map((item) => {
-            return item.link
-        })
+            const DataBase = await getDB('getAll')
+            console.log(DataBase)
+            const LinksFromDataBase = await getDB('getLinks')
 
-        const DataBase = await getDB('getAll')
-
-        const LinksFromDataBase = await getDB('getLinks')
-
-        // Вставка новых товаров, которых нет в базе
-        DNSdataLinks.forEach((link) => {
-            if (!LinksFromDataBase.includes(link)) {
-                const insertItemData = DNSdata.find((item) => item.link === link)
-                sendMessage(insertItemData, 'new')
-                changeDB(insertItemData, 'insert')
-            }
-        })
-
-        // Проверка на цену каждого продукта из базы с тем же продуктом в DNS
-        DataBase.forEach((itemDataBase) => {
-            const DNSItemSame = DNSdata.find((itemDNS) => itemDNS.link === itemDataBase.link)
-            if (DNSItemSame) {
-                if (DNSItemSame.price !== itemDataBase.price) {
-                    sendMessage(DNSItemSame, 'change', itemDataBase.price)
-                    changeDB(DNSItemSame, 'update')
+            // Вставка новых товаров, которых нет в базе
+            DNSdataLinks.forEach((link) => {
+                if (!LinksFromDataBase.includes(link)) {
+                    const insertItemData = DNSdata.find((item) => item.link === link)
+                    sendMessage(insertItemData, 'new')
+                    changeDB(insertItemData, 'insert')
                 }
-            }
-        })
+            })
 
-        // Удаление из базы, тех продуктов, которых нет в DNS
-        LinksFromDataBase.forEach((link) => {
-            if (!DNSdataLinks.includes(link)) {
-                const removeItemDataBase = DataBase.find((item) => item.link === link)
-                sendMessage(removeItemDataBase, 'remove')
-                changeDB(removeItemDataBase.link, 'delete')
-            }
-        })
+            // Проверка на цену каждого продукта из базы с тем же продуктом в DNS
+            DataBase.forEach((itemDataBase) => {
+                const DNSItemSame = DNSdata.find((itemDNS) => itemDNS.link === itemDataBase.link)
+                if (DNSItemSame) {
+                    if (DNSItemSame.price !== itemDataBase.price) {
+                        sendMessage(DNSItemSame, 'change', itemDataBase.price)
+                        changeDB(DNSItemSame, 'update')
+                    }
+                }
+            })
+
+            // Удаление из базы, тех продуктов, которых нет в DNS
+            LinksFromDataBase.forEach((link) => {
+                if (!DNSdataLinks.includes(link)) {
+                    const removeItemDataBase = DataBase.find((item) => item.link === link)
+                    sendMessage(removeItemDataBase, 'remove')
+                    changeDB(removeItemDataBase.link, 'delete')
+                }
+            })
+        } catch {}
     }
 
     const changeDB = async (itemData, operation) => {
@@ -79,26 +82,19 @@ export default function Home() {
             body: reqBody[operation],
         })
     }
-
-    // const insertDB = async (itemData) => {
-    //     const res = await isoFetch(`http://localhost:3000/api/insertOne`, {
-    //         method: 'post',
-    //         body: JSON.stringify(itemData),
-    //     })
-    // }
-    // const removeDB = async (itemData) => {
-    //     const res = await isoFetch(`http://localhost:3000/api/deleteOne`, {
-    //         method: 'post',
-    //         body: JSON.stringify({ link: itemData }),
-    //     })
-    // }
-    // const updateDB = async (itemData) => {
-    //     const res = await isoFetch(`http://localhost:3000/api/updateOne`, {
-    //         method: 'post',
-    //         body: JSON.stringify([{ link: itemData.link }, { price: itemData.price }]),
-    //     })
-    // }
-
+    const changeState = (workData, state) => {
+        switch (state) {
+            case 'add': {
+                setAddData((prev) => {
+                    let newData = prev.push(workData)
+                    if (newData.length >= 20) newData = newData.reverse().slice(0, 20).reverse()
+                    return newData
+                })
+            }
+            default:
+                return
+        }
+    }
     const clearContent = async () => {
         await isoFetch(`http://localhost:3000/api/deleteMany`, {
             method: 'post',
@@ -163,40 +159,51 @@ export default function Home() {
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js" />
             </Head>
             <div className="row">
-                <h1>{new Date(Date.now()).toLocaleString()}</h1>
-                <div className="col s2">
+                <h1>LAST UPDATE: {new Date(Date.now()).toLocaleString()}</h1>
+                <div className="col s3">
                     <div className="row">
-                        <button className="btn col s12" onClick={onFetch}>
-                            Загрузка DNS data
-                        </button>
+                        <div className="col s12">
+                            <button className="btn center-align col s12">Товары из DNS</button>
+                        </div>
                     </div>
-                    <div className="row">
-                        <button className="btn col s12" onClick={clearContent}>
-                            Очистить page
-                        </button>
-                    </div>
-                </div>
-                <div className="col s10">
-                    {console.log(data)}
                     {!lodash.isEmpty(data) &&
                         data.map((item) => {
                             return (
-                                <div className="row">
-                                    <div className="card blue-grey darken-1">
-                                        <div className="card-content white-text">
-                                            <p key={item.name}>{item.name}</p>
-                                            <p key={item.price}>{item.price}</p>
-                                            {item.reasons.map((el) => {
-                                                return <p key={el}>{el}</p>
-                                            })}
-                                            <div key={item.link} className="card-action">
-                                                <a href={item.link}>Ссылка</a>
-                                            </div>
+                                <div className="card blue-grey darken-1">
+                                    <div className="card-content white-text">
+                                        <p key={item.name}>{item.name}</p>
+                                        <p key={item.price}>{item.price}</p>
+                                        {item.reasons.map((el) => {
+                                            return <p key={el}>{el}</p>
+                                        })}
+                                        <div key={item.link} className="card-action">
+                                            <a href={item.link}>Ссылка</a>
                                         </div>
                                     </div>
                                 </div>
                             )
                         })}
+                </div>
+                <div className="col s3">
+                    <div className="row">
+                        <div className="col s12">
+                            <button className="btn col s12 center-align">Последние добавленные в БД</button>
+                        </div>
+                    </div>
+                </div>
+                <div className="col s3">
+                    <div className="row">
+                        <div className="col s12">
+                            <button className="btn col s12 center-align">Последние обновленные в БД</button>
+                        </div>
+                    </div>
+                </div>
+                <div className="col s3">
+                    <div className="row">
+                        <div className="col s12">
+                            <button className="btn col s12 center-align">Последние удаленные из БД</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

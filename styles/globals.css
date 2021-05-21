@@ -8,13 +8,13 @@ a {
     text-decoration: none;
 }
 
-.col > .row {
+/* .col > .row {
     margin: 0 auto 20px;
-}
+} */
 
-.card {
+/* .card {
     margin: 0;
-}
+} */
 
 .card .card-action {
     border: 0;
