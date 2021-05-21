@@ -11,6 +11,7 @@
 - NextJS
 - MongoDB \ mongoose
 - Puppeteer
+- CSS Materialize
 - node-telegram-bot-api
 - lodash
 - next-connect
