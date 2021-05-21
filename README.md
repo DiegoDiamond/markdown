@@ -1,3 +1,21 @@
+Парсинг сайта DNS раздела "Уцененные товары" по определенным категориям (пока вшиты в код)
+С дальнейшим оповещением в telegram - новое поступление товара, изменение цены, товар снят с продажи
+Есть front-end UI, который показывает последние изменения
+Данные хранятся в MongoDB
+
+## Используемый стэк
+- ReactJS
+- NextJS
+- MongoDB \ mongoose
+- Puppeteer
+- node-telegram-bot-api
+- lodash
+- next-connect
+- isomorphic unfecth
+
+Пример оповещения
+![image](https://user-images.githubusercontent.com/13434364/119121248-a134c800-ba46-11eb-9717-7c0cee9192c2.png)
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
