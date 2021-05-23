@@ -3,7 +3,7 @@ import nextConnect from 'next-connect'
 
 // параметры для использования новой версии Mongo, т.к. старый конструктор устарел
 const client = new MongoClient(
-    'mongodb+srv://diegomongo:diegomongo@diegocluster.m5g0h.mongodb.net/dns?retryWrites=true&w=majority',
+    'mongodb+srv://@diegocluster.m5g0h.mongodb.net/dns?retryWrites=true&w=majority',
     { useNewUrlParser: true, useUnifiedTopology: true }
 )
 
