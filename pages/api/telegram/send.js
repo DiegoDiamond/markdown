@@ -1,5 +1,5 @@
 const TelegramApi = require('node-telegram-bot-api')
-const token = '590958212:AAEqsjxMhHlDAweeOZ4wpGoI7wm_JeyYO3A'
+const token = ''
 const bot = new TelegramApi(token, { polling: false })
 export default async (req, res) => {
     try {
